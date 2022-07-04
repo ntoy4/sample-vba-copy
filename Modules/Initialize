@@ -1,0 +1,106 @@
+Sub initMain(ByRef source As String, ByRef targets() As String)
+  Call initSourceSheet(source)
+  Call initSheets(targets)
+End Sub
+
+' まとめシートの処理
+Private Sub initSourceSheet(ByRef source As String)
+  ' 指定した行以下のデータを削除する
+  Const CLEAR_START_ROW_NUM As Long = 8
+  Call deleteRows(source, CLEAR_START_ROW_NUM)
+  
+  ' 日付での並び替え
+  Const HEADER_ROW_NUM As Long = 7
+  Const SORT_COLUMN_NUM As Long = 3
+  Call sortRows(source, HEADER_ROW_NUM, SORT_COLUMN_NUM)
+End Sub
+
+' まとめシート以外の処理
+Private Sub initSheets(ByRef sheets() As String)
+  ' 指定した行以下のデータを削除する
+  Const CLEAR_START_ROW_NUM As Long = 8
+  
+  ' データClear処理
+  Dim i As Integer
+  For i = 0 To UBound(sheets)
+    Call clearRows(sheets(i), CLEAR_START_ROW_NUM)
+  Next i
+End Sub
+
+' 指定されたヘッダー位置とカラムでソートする
+Private Sub sortRows(ByRef name As String, ByVal headerRowNum As Long, ByVal sortColumnNum As Long)
+  Dim rowLastIndex As Long
+  Dim ws As Worksheet
+  Set ws = ThisWorkbook.Worksheets(name)
+  ws.Activate
+  With ws
+    ' 最終行の特定
+    rowLastIndex = Cells(Rows.Count, sortColumnNum).End(xlUp).Row
+  End With
+  
+  ' Sort
+  With ws.Sort
+    With .SortFields
+      .Clear
+      .Add Key:=ws.Cells(headerRowNum, sortColumnNum), Order:=xlAscending
+    End With
+    .SetRange ws.Range(headerRowNum & ":" & rowLastIndex)
+    .Header = xlYes
+    .Apply
+  End With
+End Sub
+
+' まとめシートの、指定された行以下で条件を満たし行を削除する
+Private Sub deleteRows(ByRef name As String, ByVal startRowNum As Long)
+  ' データの存在を確認する列の指定
+  Const START_COLUMN_NUM As Long = 3
+  ' 空白行削除条件の列の指定
+  Const DATE_COLUM_NUM As Long = 3
+  Const XY_COLUMN_NUM As Long = 4
+  
+  Dim ws As Worksheet
+  Set ws = ThisWorkbook.Worksheets(name)
+  ws.Activate
+  With ws
+    ' 最終行の特定
+    Dim rowLastIndex As Long
+    rowLastIndex = Cells(Rows.Count, START_COLUMN_NUM).End(xlUp).Row
+    
+    ' 行の削除
+    If rowLastIndex >= startRowNum Then
+      Dim i As Long
+      Dim rowNum As Long
+      Dim columnD As String
+      For i = 0 To (rowLastIndex - startRowNum)
+        rowNum = rowLastIndex - i
+        columnD = Cells(rowNum, XY_COLUMN_NUM).Value
+        If Cells(rowNum, DATE_COLUM_NUM).Value = "" Or columnD = "x" Or columnD = "y" Then
+          Rows(rowNum).Delete
+        End If
+      Next i
+    End If
+  End With
+
+End Sub
+
+' 指定されたシートの、指定された行以下をクリアする
+Private Sub clearRows(ByVal name As String, ByVal startRowNum As Long)
+  ' データの存在を確認する列の指定
+  Const START_COLUMN_NUM As Long = 3
+  
+  Dim ws As Worksheet
+  Set ws = ThisWorkbook.Worksheets(name)
+  ws.Activate
+  With ws
+    ' 最終行の特定
+    Dim rowLastIndex As Long
+    rowLastIndex = Cells(Rows.Count, START_COLUMN_NUM).End(xlUp).Row
+    
+    ' 指定された行以下にデータがある場合にクリア
+    If rowLastIndex >= startRowNum Then
+      Dim area As String
+      area = startRowNum & ":" & rowLastIndex
+      Range(area).ClearContents
+    End If
+  End With
+End Sub

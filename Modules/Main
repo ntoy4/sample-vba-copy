@@ -1,0 +1,14 @@
+Sub main()
+  ' 処理対象定義
+  Dim sourceSheet As String: sourceSheet = "まとめシート"
+  
+  Dim targetSheets() As String
+  Call getTargetSheets(sourceSheet, targetSheets)
+  
+  ' 処理
+  Application.ScreenUpdating = False
+  Call initMain(sourceSheet, targetSheets)
+  Call copyMain(sourceSheet, targetSheets)
+  Application.ScreenUpdating = True
+  
+End Sub

@@ -1,0 +1,18 @@
+' 処理対象Sheetのlistを作成
+Sub getTargetSheets(excludeSheet As String, ByRef targets() As String)
+  Dim sheetNum As Integer: sheetNum = ThisWorkbook.sheets.Count
+  
+  Dim i As Integer
+  Dim j As Integer: j = 0
+  Dim sheetNameTemp As String
+  
+  For i = 1 To sheetNum
+    sheetNameTemp = ThisWorkbook.sheets(i).name
+    
+    If sheetNameTemp <> excludeSheet Then
+      ReDim Preserve targets(j)
+      targets(j) = ThisWorkbook.sheets(i).name
+      j = j + 1
+    End If
+  Next i
+End Sub

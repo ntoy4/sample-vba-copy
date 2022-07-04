@@ -1,0 +1,102 @@
+Sub copyMain(ByRef source As String, ByRef targets() As String)
+  Dim sourceSheet As Worksheet
+  Set sourceSheet = ThisWorkbook.Worksheets(source)
+  
+  Dim i As Integer
+  For i = 0 To UBound(targets)
+    ' データコピー
+    Call copyCodeCells(targets(i), sourceSheet)
+    ' 空白行削除
+    Call deleteEmptyRows(targets(i))
+  Next i
+  
+End Sub
+
+' コードが一致したセルデータをコピーする
+Private Sub copyCodeCells(ByRef target As String, ByRef source As Worksheet)
+  ' CODE行とDATA開始行は全シートで同じ前提
+  Const CODE_COLUMN_NUM As Long = 5
+  Const CODE_ROW_NUM As Long = 6
+  Const SOURCE_COLUMN_NUM As Long = 5
+  Const SOURCE_DATE_COLUMN_NUM As Long = 3
+  Const SOURCE_DATA_ROW_NUM As Long = 8
+  
+  Dim ws As Worksheet
+  Set ws = ThisWorkbook.Worksheets(target)
+  
+  ' 最終列の取得
+  Dim columnLastIndex As Long
+  columnLastIndex = ws.Cells(CODE_ROW_NUM, Columns.Count).End(xlToLeft).Column
+  Dim sourceLastIndex As Long
+  sourceLastIndex = source.Cells(CODE_ROW_NUM, Columns.Count).End(xlToLeft).Column
+  
+  ' 最終行の取得
+  Dim sourceRowLastIndex As Long
+  sourceRowLastIndex = source.Cells(Rows.Count, SOURCE_DATE_COLUMN_NUM).End(xlUp).Row
+  
+  ' データ探索
+  If columnLastIndex < CODE_COLUMN_NUM Or sourceLastIndex < CODE_COLUMN_NUM Then
+    ' データ探索終了
+    Exit Sub
+  End If
+  
+  Dim i As Long
+  Dim sCounter As Long
+  Dim tempCode As String
+  Dim sCode As String
+  
+  Dim sRowCounter As Long
+  Dim tempData As String
+  
+  ' 対象シートのコード毎の処理
+  For i = CODE_COLUMN_NUM To columnLastIndex
+    tempCode = ws.Cells(CODE_ROW_NUM, i).Value
+    dataNum = 0
+    ' まとめシートの列との照合
+    For sCounter = CODE_COLUMN_NUM To sourceLastIndex
+      sCode = source.Cells(CODE_ROW_NUM, sCounter).Value
+      If tempCode = sCode Then
+        For sRowCounter = SOURCE_DATA_ROW_NUM To sourceRowLastIndex
+          tempData = source.Cells(sRowCounter, sCounter).Value
+          ' データコピー
+          If tempData <> "" Then
+            ws.Cells(sRowCounter, SOURCE_DATE_COLUMN_NUM).Value = source.Cells(sRowCounter, SOURCE_DATE_COLUMN_NUM).Value
+            ws.Cells(sRowCounter, i).Value = tempData
+          End If
+        Next sRowCounter
+      End If
+    Next sCounter
+  Next i
+End Sub
+
+' 空白行削除処理
+Private Sub deleteEmptyRows(ByRef name As String)
+  ' データの存在を確認する列の指定
+  Const START_COLUMN_NUM As Long = 3
+  ' 空白行削除条件の列の指定
+  Const DATE_COLUM_NUM As Long = 3
+  ' 削除対象開始行の指定
+  Const START_DELETE_ROW_NUM As Long = 8
+  
+  Dim ws As Worksheet
+  Set ws = ThisWorkbook.Worksheets(name)
+  ws.Activate
+  With ws
+    ' 最終行の特定
+    Dim rowLastIndex As Long
+    rowLastIndex = Cells(Rows.Count, START_COLUMN_NUM).End(xlUp).Row
+    
+    ' 行の削除
+    If rowLastIndex >= startRowNum Then
+      Dim i As Long
+      Dim rowNum As Long
+      For i = 0 To (rowLastIndex - START_DELETE_ROW_NUM)
+        rowNum = rowLastIndex - i
+        If Cells(rowNum, DATE_COLUM_NUM).Value = "" Then
+          Rows(rowNum).Delete
+        End If
+      Next i
+    End If
+  End With
+
+End Sub
